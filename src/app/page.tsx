@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useMutation } from "@tanstack/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import axios from "axios";
 import { Send } from "lucide-react";
 import { useState } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const queryClient = new QueryClient();
 
@@ -28,9 +29,10 @@ function ChatComponent() {
       }
 
       const { data } = await axios.post(
-        `${BASE_URL}/aitohuman`,
+        `${BASE_URL}/gpt4`,
         {
-          text: input,
+          messages: messages.concat({ role: "user", content: input }),
+          web_access: false,
         },
         {
           headers: {
@@ -44,7 +46,7 @@ function ChatComponent() {
     onSuccess: (data) => {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.message },
+        { role: "assistant", content: data.result },
       ]);
     },
     onError: (error) => {
@@ -57,7 +59,7 @@ function ChatComponent() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
     setMessages((prev) => [...prev, { role: "user", content: input }]);
     setInput("");
@@ -71,9 +73,15 @@ function ChatComponent() {
       <main className="flex flex-col w-full max-w-3xl row-start-2 h-full">
         <div className="flex-1 overflow-y-auto space-y-4 mb-4">
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-gray-400">
-                No messages yet. Start a conversation!
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+              <div className="text-4xl mb-2">👋</div>
+              <h2 className="text-xl font-semibold text-white mb-2">
+                Hello, I am Oversabi
+              </h2>
+              <p className="text-gray-400 max-w-md">
+                There isn&apos;t anything in this world that I don&apos;t know,
+                just ask me anything in the chatbox below, and I&apos;ll answer
+                ASAP
               </p>
             </div>
           ) : (
@@ -85,13 +93,19 @@ function ChatComponent() {
                 }`}
               >
                 <div
-                  className={`rounded-lg p-3 max-w-[80%] ${
+                  className={`rounded-lg p-3 max-w-[80%] overflow-hidden wrap-break-word ${
                     message.role === "user"
                       ? "bg-blue-500 text-white"
                       : "bg-gray-800 text-white"
                   }`}
                 >
-                  <p>{message.content}</p>
+                  {message.role === "user" ? (
+                    <p>{message.content}</p>
+                  ) : (
+                    <Markdown remarkPlugins={[remarkGfm]}>
+                      {message.content}
+                    </Markdown>
+                  )}
                 </div>
               </div>
             ))
@@ -107,15 +121,14 @@ function ChatComponent() {
       </main>
       <form
         onSubmit={handleSubmit}
-        className="flex items-center fixed bottom-0 max-w-3xl w-full mb-5 gap-5 bg-gray-700 p-4 rounded-2xl shadow-lg"
+        className="flex items-baseline-last fixed bottom-0 max-w-3xl w-full mb-5 gap-5 bg-gray-700 p-4 rounded-2xl shadow-lg"
       >
-        <Input
-          type="text"
+        <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
-          className="p-5 !bg-transparent !shadow-none border-none focus:ring-0 focus:outline-none !text-base !placeholder:text-gray-400 !text-white"
-        />
+          className="p-5 !bg-transparent !shadow-none border-none focus:ring-0 focus:outline-none !text-base !placeholder:text-gray-400 !text-white w-full resize-none h-12 overflow-hidden"
+        ></textarea>
         <Button
           variant={"default"}
           size={"icon"}
