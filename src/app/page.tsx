@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useMutation } from "@tanstack/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import axios from "axios";
 import { Send } from "lucide-react";
-import { useState } from "react";
+import { FormEvent, useState, useRef, useEffect } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -17,6 +18,15 @@ function ChatComponent() {
   >([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -71,7 +81,7 @@ function ChatComponent() {
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] bg-gray-900">
       <main className="flex flex-col w-full max-w-3xl row-start-2 h-full">
-        <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+        <div className="flex-1 overflow-hidden space-y-4 mb-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
               <div className="text-4xl mb-2">👋</div>
@@ -113,22 +123,29 @@ function ChatComponent() {
           {isLoading && (
             <div className="flex items-start gap-2">
               <div className="bg-gray-800 rounded-lg p-3 text-white">
-                <p>Thinking...</p>
+                <p className="animate-pulse">Thinking...</p>
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
       </main>
       <form
         onSubmit={handleSubmit}
-        className="flex items-baseline-last fixed bottom-0 max-w-3xl w-full mb-5 gap-5 bg-gray-700 p-4 rounded-2xl shadow-lg"
+        className="flex items-start fixed bottom-0 max-w-3xl w-full mb-5 gap-5 bg-gray-700 p-4 rounded-2xl shadow-lg"
       >
-        <textarea
+        <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
+            }
+          }}
           placeholder="Type your message..."
           className="p-5 !bg-transparent !shadow-none border-none focus:ring-0 focus:outline-none !text-base !placeholder:text-gray-400 !text-white w-full resize-none h-12 overflow-hidden"
-        ></textarea>
+        ></Textarea>
         <Button
           variant={"default"}
           size={"icon"}
@@ -137,7 +154,7 @@ function ChatComponent() {
         >
           <Send strokeWidth={1} />
         </Button>
-      </form>
+      </form>{" "}
     </div>
   );
 }
