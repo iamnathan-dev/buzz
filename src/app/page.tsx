@@ -134,7 +134,7 @@ function ChatComponent() {
       </main>
       <form
         onSubmit={handleSubmit}
-        className="flex items-start fixed bottom-0 max-w-3xl w-[95%] md:w-full mb-3 md:mb-5 gap-3 md:gap-5 bg-gray-700 p-3 md:p-4 rounded-xl md:rounded-2xl shadow-lg"
+        className="flex items-start fixed bottom-0 md:max-w-3xl max-w-sm w-full md:w-full mb-3 md:mb-5 gap-3 md:gap-5 bg-gray-700 p-3 md:p-4 rounded-xl md:rounded-2xl shadow-lg"
       >
         <Textarea
           value={input}
