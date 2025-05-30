@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useMutation } from "@tanstack/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import axios from "axios";
-import { Mic, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { FormEvent, useState, useRef, useEffect } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -18,7 +18,6 @@ function ChatComponent() {
   >([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -28,18 +27,6 @@ function ChatComponent() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
-
-  const startListening = async () => {
-    try {
-      if (!("webkitSpeechRecognition" in window)) {
-        throw new Error("Speech recognition not supported in this browser.");
-      }
-
-      // use mic logic
-    } catch (error) {
-      console.error("Speech recognition not supported:", error);
-    }
-  };
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -164,27 +151,14 @@ function ChatComponent() {
         <Button
           variant={"default"}
           size={"icon"}
-          disabled={isLoading || isListening}
+          disabled={isLoading}
           onClick={(e) => {
             e.preventDefault();
-            if (input === "") {
-              startListening();
-            } else {
-              handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
-            }
+            handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
           }}
           className="cursor-pointer bg-gray-900 hover:bg-gray-800 h-10 w-10 md:h-12 md:w-12"
         >
-          {input === "" ? (
-            <Mic
-              strokeWidth={1}
-              className={`h-5 w-5 md:h-6 md:w-6 ${
-                isListening ? "text-red-500 animate-pulse" : ""
-              }`}
-            />
-          ) : (
-            <Send strokeWidth={1} className="h-5 w-5 md:h-6 md:w-6" />
-          )}
+          <Send strokeWidth={1} className="h-5 w-5 md:h-6 md:w-6" />
         </Button>
       </form>
     </div>
