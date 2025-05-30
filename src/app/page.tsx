@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useMutation } from "@tanstack/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import axios from "axios";
-import { Send } from "lucide-react";
+import { Mic, Send } from "lucide-react";
 import { FormEvent, useState, useRef, useEffect } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -18,6 +18,7 @@ function ChatComponent() {
   >([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -27,6 +28,18 @@ function ChatComponent() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  const startListening = async () => {
+    try {
+      if (!("webkitSpeechRecognition" in window)) {
+        throw new Error("Speech recognition not supported in this browser.");
+      }
+
+      // use mic logic
+    } catch (error) {
+      console.error("Speech recognition not supported:", error);
+    }
+  };
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -79,16 +92,16 @@ function ChatComponent() {
   }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] bg-gray-900">
+    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-4 md:p-8 pb-20 gap-8 md:gap-16 lg:p-20 font-[family-name:var(--font-geist-sans)] bg-gray-900">
       <main className="flex flex-col w-full max-w-3xl row-start-2 h-full">
         <div className="flex-1 overflow-hidden space-y-4 mb-4">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-              <div className="text-4xl mb-2">👋</div>
-              <h2 className="text-xl font-semibold text-white mb-2">
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 p-4">
+              <div className="text-3xl md:text-4xl mb-2">👋</div>
+              <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
                 Hello, I am Oversabi
               </h2>
-              <p className="text-gray-400 max-w-md">
+              <p className="text-sm md:text-base text-gray-400 max-w-md px-2">
                 There isn&apos;t anything in this world that I don&apos;t know,
                 just ask me anything in the chatbox below, and I&apos;ll answer
                 ASAP
@@ -103,14 +116,14 @@ function ChatComponent() {
                 }`}
               >
                 <div
-                  className={`rounded-lg p-3 max-w-[80%] overflow-hidden wrap-break-word ${
+                  className={`rounded-lg p-2 md:p-3 max-w-[85%] md:max-w-[80%] overflow-hidden wrap-break-word ${
                     message.role === "user"
                       ? "bg-blue-500 text-white"
                       : "bg-gray-800 text-white"
                   }`}
                 >
                   {message.role === "user" ? (
-                    <p>{message.content}</p>
+                    <p className="text-sm md:text-base">{message.content}</p>
                   ) : (
                     <Markdown remarkPlugins={[remarkGfm]}>
                       {message.content}
@@ -122,8 +135,10 @@ function ChatComponent() {
           )}
           {isLoading && (
             <div className="flex items-start gap-2">
-              <div className="bg-gray-800 rounded-lg p-3 text-white">
-                <p className="animate-pulse">Thinking...</p>
+              <div className="bg-gray-800 rounded-lg p-2 md:p-3 text-white">
+                <p className="animate-pulse text-sm md:text-base">
+                  Thinking...
+                </p>
               </div>
             </div>
           )}
@@ -132,7 +147,7 @@ function ChatComponent() {
       </main>
       <form
         onSubmit={handleSubmit}
-        className="flex items-start fixed bottom-0 max-w-3xl w-full mb-5 gap-5 bg-gray-700 p-4 rounded-2xl shadow-lg"
+        className="flex items-start fixed bottom-0 max-w-3xl w-[95%] md:w-full mb-3 md:mb-5 gap-3 md:gap-5 bg-gray-700 p-3 md:p-4 rounded-xl md:rounded-2xl shadow-lg"
       >
         <Textarea
           value={input}
@@ -144,17 +159,34 @@ function ChatComponent() {
             }
           }}
           placeholder="Type your message..."
-          className="p-5 !bg-transparent !shadow-none border-none focus:ring-0 focus:outline-none !text-base !placeholder:text-gray-400 !text-white w-full resize-none h-12 overflow-hidden"
+          className="p-3 md:p-5 !bg-transparent !shadow-none border-none focus:ring-0 focus:outline-none !text-sm md:!text-base !placeholder:text-gray-400 !text-white w-full resize-none h-10 md:h-12 overflow-hidden"
         ></Textarea>
         <Button
           variant={"default"}
           size={"icon"}
-          disabled={isLoading}
-          className="cursor-pointer bg-gray-900 hover:bg-gray-800"
+          disabled={isLoading || isListening}
+          onClick={(e) => {
+            e.preventDefault();
+            if (input === "") {
+              startListening();
+            } else {
+              handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
+            }
+          }}
+          className="cursor-pointer bg-gray-900 hover:bg-gray-800 h-10 w-10 md:h-12 md:w-12"
         >
-          <Send strokeWidth={1} />
+          {input === "" ? (
+            <Mic
+              strokeWidth={1}
+              className={`h-5 w-5 md:h-6 md:w-6 ${
+                isListening ? "text-red-500 animate-pulse" : ""
+              }`}
+            />
+          ) : (
+            <Send strokeWidth={1} className="h-5 w-5 md:h-6 md:w-6" />
+          )}
         </Button>
-      </form>{" "}
+      </form>
     </div>
   );
 }
