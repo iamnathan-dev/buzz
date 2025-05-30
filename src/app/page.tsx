@@ -146,7 +146,7 @@ function ChatComponent() {
             }
           }}
           placeholder="Type your message..."
-          className="p-3 md:p-5 !bg-transparent !shadow-none border-none focus:ring-0 focus:outline-none !text-sm md:!text-base !placeholder:text-gray-400 !text-white w-full resize-none h-10 md:h-12 overflow-hidden"
+          className="p-3 md:p-5 !bg-transparent !shadow-none border-none focus:ring-0 focus:outline-none !text-sm md:!text-base !placeholder:text-gray-400 !text-white resize-none h-10 md:h-12 overflow-hidden"
         ></Textarea>
         <Button
           variant={"default"}
